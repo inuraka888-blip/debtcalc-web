@@ -178,7 +178,7 @@
     "notificationDefault": "Not requested",
     "notificationUnsupported": "Unsupported",
     "cloudAccount": "Cloud Account",
-    "cloudAccountDescription": "Use Supabase magic link auth as the foundation for future cloud features.",
+    "cloudAccountDescription": "Sign in to sync data across devices.",
     "emailPlaceholder": "Email address",
     "emailRequired": "Enter an email address.",
     "sendMagicLink": "Send magic link",
@@ -201,7 +201,8 @@
     "synced": "Synced",
     "syncError": "Sync error",
     "lastSyncedAt": "Last synced",
-    "supabaseNotConfigured": "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "authError": "Auth error",
+    "supabaseNotConfigured": "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     "confirmDeleteCategory": "Delete category \"{name}\"?"
   },
   "dataSafety": {
@@ -221,7 +222,7 @@
     "backupRecommended": "Backup recommended before clearing browser data, changing devices, or reinstalling the PWA.",
     "cloudSync": "Cloud Sync",
     "cloudSyncDescription": "Manual sync keeps the app local-first. Choose when to upload local data or replace this device with cloud data.",
-    "supabaseNotConfigured": "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "supabaseNotConfigured": "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     "emailPlaceholder": "Email address",
     "emailRequired": "Enter an email address.",
     "sendMagicLink": "Send magic link",

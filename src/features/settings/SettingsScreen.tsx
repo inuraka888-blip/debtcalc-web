@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import type { User } from "@supabase/supabase-js";
 import type { ExpenseCategory } from "@/domain/models";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import {
@@ -10,13 +9,7 @@ import {
   isNotificationSupported,
   requestNotificationPermission,
 } from "@/lib/notifications";
-import {
-  getCurrentUser,
-  isSupabaseConfigured,
-  signInWithEmail,
-  signOut,
-  supabase,
-} from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type { SyncStatus } from "@/lib/storage";
 import { useEventsStore } from "@/store/eventsStore";
 import type { CategoryMutationError } from "@/store/eventsStore";
@@ -31,6 +24,12 @@ export function SettingsScreen() {
   const categories = useEventsStore((state) => state.categories);
   const loadFromStorage = useEventsStore((state) => state.loadFromStorage);
   const ensureSeedData = useEventsStore((state) => state.ensureSeedData);
+  const initializeAuth = useEventsStore((state) => state.initializeAuth);
+  const signIn = useEventsStore((state) => state.signIn);
+  const signOut = useEventsStore((state) => state.signOut);
+  const authUser = useEventsStore((state) => state.authUser);
+  const authStatus = useEventsStore((state) => state.authStatus);
+  const authError = useEventsStore((state) => state.authError);
   const addCategory = useEventsStore((state) => state.addCategory);
   const updateCategory = useEventsStore((state) => state.updateCategory);
   const deleteCategory = useEventsStore((state) => state.deleteCategory);
@@ -47,9 +46,8 @@ export function SettingsScreen() {
   const [editingIcon, setEditingIcon] = useState("");
   const [notificationPermission, setNotificationPermission] =
     useState<ReturnType<typeof getNotificationPermission>>(() => getNotificationPermission());
-  const [cloudUser, setCloudUser] = useState<User | null>(null);
   const [cloudEmail, setCloudEmail] = useState("");
-  const [isCloudAuthLoading, setIsCloudAuthLoading] = useState(isSupabaseConfigured());
+  const [isCloudAuthLoading, setIsCloudAuthLoading] = useState(false);
   const [cloudMessage, setCloudMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,38 +56,8 @@ export function SettingsScreen() {
   }, [ensureSeedData, loadFromStorage]);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      return;
-    }
-
-    let isMounted = true;
-    void getCurrentUser()
-      .then((user) => {
-        if (isMounted) {
-          setCloudUser(user);
-        }
-      })
-      .catch((authError: unknown) => {
-        if (isMounted) {
-          setError(authError instanceof Error ? authError.message : String(authError));
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsCloudAuthLoading(false);
-        }
-      });
-
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCloudUser(session?.user ?? null);
-      setIsCloudAuthLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-      data.subscription.unsubscribe();
-    };
-  }, []);
+    void initializeAuth();
+  }, [initializeAuth]);
 
   function handleAddCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,7 +134,7 @@ export function SettingsScreen() {
 
     setIsCloudAuthLoading(true);
     try {
-      await signInWithEmail(trimmedEmail);
+      await signIn(trimmedEmail, window.location.href);
       setError(null);
       setCloudMessage(t("magicLinkSent"));
     } catch (authError) {
@@ -181,7 +149,6 @@ export function SettingsScreen() {
     setIsCloudAuthLoading(true);
     try {
       await signOut();
-      setCloudUser(null);
       setError(null);
       setCloudMessage(t("signedOut"));
     } catch (authError) {
@@ -284,12 +251,12 @@ export function SettingsScreen() {
             <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
               {t("supabaseNotConfigured")}
             </p>
-          ) : cloudUser ? (
+          ) : authStatus === "signedIn" && authUser ? (
             <div className="mt-4 grid gap-3">
               <div className="flex flex-col gap-3 rounded-md bg-[var(--surface-subtle)] px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-zinc-900">
-                    {t("signedInAs", { email: cloudUser.email ?? "" })}
+                    {t("signedInAs", { email: authUser.email ?? "" })}
                   </p>
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     {t("syncStatus")}: {syncStatusLabel(syncStatus, t)}
@@ -352,7 +319,7 @@ export function SettingsScreen() {
               />
               <button
                 type="submit"
-                disabled={isCloudAuthLoading}
+                disabled={isCloudAuthLoading || authStatus === "unknown"}
                 className="flex min-h-11 items-center justify-center rounded-md bg-zinc-950 px-4 py-2 text-center text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {t("sendMagicLink")}
@@ -362,6 +329,11 @@ export function SettingsScreen() {
 
           {cloudMessage ? (
             <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{cloudMessage}</p>
+          ) : null}
+          {authStatus === "error" && authError ? (
+            <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-[var(--danger)]">
+              {t("authError")}: {authError}
+            </p>
           ) : null}
         </section>
 

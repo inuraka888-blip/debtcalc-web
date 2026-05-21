@@ -14,11 +14,11 @@ import { appStorageAdapter } from "@/lib/storage";
 import { SupabaseStorageAdapter } from "@/lib/storage";
 import {
   getCurrentUser,
-  isSupabaseConfigured,
-  signInWithEmail,
   signOut,
-  supabase,
-} from "@/lib/supabase/client";
+  signInWithMagicLink,
+  onAuthStateChange,
+} from "@/lib/supabase/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { CURRENT_APP_STATE_VERSION } from "@/domain/migrations";
 import { useEventsStore } from "@/store/eventsStore";
 
@@ -60,14 +60,14 @@ export function DataSafetyScreen() {
       }
     });
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const subscription = onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setIsAuthLoading(false);
     });
 
     return () => {
       isMounted = false;
-      data.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -155,7 +155,7 @@ export function DataSafetyScreen() {
     }
 
     setIsAuthLoading(true);
-    const authError = await signInWithEmail(trimmedEmail)
+    const authError = await signInWithMagicLink(trimmedEmail, window.location.href)
       .then(() => null)
       .catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
     setIsAuthLoading(false);

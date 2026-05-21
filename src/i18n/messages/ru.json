@@ -178,7 +178,7 @@
     "notificationDefault": "Не запрашивались",
     "notificationUnsupported": "Не поддерживаются",
     "cloudAccount": "Cloud Account",
-    "cloudAccountDescription": "Supabase magic link auth как foundation для будущих cloud-возможностей.",
+    "cloudAccountDescription": "Войдите, чтобы синхронизировать данные между устройствами.",
     "emailPlaceholder": "Email",
     "emailRequired": "Введите email.",
     "sendMagicLink": "Отправить magic link",
@@ -201,7 +201,8 @@
     "synced": "Синхронизировано",
     "syncError": "Ошибка синхронизации",
     "lastSyncedAt": "Последняя синхронизация",
-    "supabaseNotConfigured": "Supabase не настроен. Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "authError": "Ошибка авторизации",
+    "supabaseNotConfigured": "Supabase не настроен. Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     "confirmDeleteCategory": "Удалить категорию «{name}»?"
   },
   "dataSafety": {
@@ -221,7 +222,7 @@
     "backupRecommended": "Рекомендуется сделать backup перед очисткой данных браузера, сменой устройства или переустановкой PWA.",
     "cloudSync": "Cloud Sync",
     "cloudSyncDescription": "Ручная синхронизация сохраняет local-first подход. Вы сами выбираете, когда загрузить локальные данные в cloud или заменить данные устройства cloud-версией.",
-    "supabaseNotConfigured": "Supabase не настроен. Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "supabaseNotConfigured": "Supabase не настроен. Добавьте NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY.",
     "emailPlaceholder": "Email",
     "emailRequired": "Введите email.",
     "sendMagicLink": "Отправить magic link",

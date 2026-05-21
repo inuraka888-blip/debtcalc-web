@@ -2,7 +2,8 @@ import { mergeDefaultCategories } from "@/domain/categories";
 import { applyMigrations, CURRENT_APP_STATE_VERSION } from "@/domain/migrations";
 import type { AppState } from "./appState";
 import type { AppStorageAdapter } from "./AppStorageAdapter";
-import { getCurrentUser, supabase } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import { supabase } from "@/lib/supabase/client";
 import { withRetry } from "@/lib/retry";
 
 interface UserAppStateRow {

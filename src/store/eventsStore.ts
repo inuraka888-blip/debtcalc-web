@@ -7,6 +7,13 @@ import { mergeDefaultCategories } from "@/domain/categories";
 import { buildValidatedExpense } from "@/domain/expenseValidation";
 import type { ExpenseInput, ExpenseValidationError } from "@/domain/expenseValidation";
 import { CURRENT_APP_STATE_VERSION } from "@/domain/migrations";
+import {
+  getCurrentUser,
+  onAuthStateChange,
+  signInWithMagicLink,
+  signOut as signOutFromSupabase,
+} from "@/lib/supabase/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 import type {
   Debt,
   Event,
@@ -88,11 +95,21 @@ export interface ReminderInput {
   remindAt: string;
 }
 
+export interface AuthUser {
+  id: string;
+  email?: string;
+}
+
+export type AuthStatus = "unknown" | "signedOut" | "signedIn" | "error";
+
 interface EventsState {
   events: Event[];
   categories: ExpenseCategory[];
   reminders: Reminder[];
   activeEventId?: EventId;
+  authUser?: AuthUser;
+  authStatus: AuthStatus;
+  authError?: string;
   syncStatus: SyncStatus;
   syncError?: string;
   lastSyncedAt?: string;
@@ -102,6 +119,9 @@ interface EventsState {
   loadFromStorage: () => Promise<void>;
   saveToStorage: () => Promise<void>;
   resetStorage: () => Promise<void>;
+  initializeAuth: () => Promise<void>;
+  signIn: (email: string, redirectTo?: string) => Promise<void>;
+  signOut: () => Promise<void>;
   syncToCloud: () => Promise<void>;
   loadFromCloud: () => Promise<boolean>;
   clearCloudState: () => Promise<void>;
@@ -180,12 +200,71 @@ export const useEventsStore = create<EventsState>()(
       categories: mergeDefaultCategories([]),
       reminders: [],
       activeEventId: undefined,
+      authUser: undefined,
+      authStatus: "unknown",
+      authError: undefined,
       syncStatus: "idle",
       syncError: undefined,
       lastSyncedAt: undefined,
       collaborativeEvents: {},
       realtimeMembers: {},
       isStorageLoaded: false,
+
+      initializeAuth: async () => {
+        if (!isSupabaseConfigured()) {
+          set({ authUser: undefined, authStatus: "signedOut", authError: undefined });
+          return;
+        }
+
+        try {
+          const user = await getCurrentUser();
+          set({
+            authUser: user ? { id: user.id, email: user.email } : undefined,
+            authStatus: user ? "signedIn" : "signedOut",
+            authError: undefined,
+          });
+        } catch (error) {
+          set({
+            authUser: undefined,
+            authStatus: "error",
+            authError: error instanceof Error ? error.message : "Failed to initialize auth.",
+          });
+        }
+
+        ensureAuthSubscription(set);
+      },
+
+      signIn: async (email, redirectTo) => {
+        if (!isSupabaseConfigured()) {
+          set({
+            authStatus: "error",
+            authError: "Supabase is not configured.",
+          });
+          return;
+        }
+
+        try {
+          await signInWithMagicLink(email.trim(), redirectTo);
+          set({ authError: undefined });
+        } catch (error) {
+          set({
+            authStatus: "error",
+            authError: error instanceof Error ? error.message : "Failed to send magic link.",
+          });
+        }
+      },
+
+      signOut: async () => {
+        try {
+          await signOutFromSupabase();
+          set({ authUser: undefined, authStatus: "signedOut", authError: undefined });
+        } catch (error) {
+          set({
+            authStatus: "error",
+            authError: error instanceof Error ? error.message : "Failed to sign out.",
+          });
+        }
+      },
 
       loadFromStorage: async () => {
         if (get().isStorageLoaded) {
@@ -1046,6 +1125,23 @@ export const useEventsStore = create<EventsState>()(
       },
     }),
 );
+
+let isAuthSubscriptionInitialized = false;
+
+function ensureAuthSubscription(set: (partial: Partial<EventsState>) => void): void {
+  if (isAuthSubscriptionInitialized) {
+    return;
+  }
+
+  isAuthSubscriptionInitialized = true;
+  onAuthStateChange((_event, session) => {
+    set({
+      authUser: session?.user ? { id: session.user.id, email: session.user.email } : undefined,
+      authStatus: session?.user ? "signedIn" : "signedOut",
+      authError: undefined,
+    });
+  });
+}
 
 let lastPersistedAppState = "";
 

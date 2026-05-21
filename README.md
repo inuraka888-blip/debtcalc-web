@@ -26,7 +26,7 @@ DebtCalc can run without Supabase, but magic-link auth is available when these e
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_USE_NORMALIZED_CLOUD_EVENTS=false
 ```
 
@@ -54,7 +54,7 @@ src/
 2. Import the repository in Vercel.
 3. Use the default Next.js settings.
 4. Build command: `npm run build`.
-5. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` if Cloud Account auth should be enabled.
+5. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` if Cloud Account auth should be enabled.
 6. Output is handled by Next.js automatically.
 
 No backend or database is required for the first stage. Data is stored locally in the browser.
